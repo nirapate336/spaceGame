@@ -7,10 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Media;
+using System.Threading;
+
 
 namespace spaceGame
 {
-    public partial class Form1 : Form
+    public partial class form1 : Form
     {
 
         List<int> obstacleYLeftList = new List<int>();
@@ -23,10 +26,9 @@ namespace spaceGame
 
 
 
-
-
-
-
+        SoundPlayer obstacle = new SoundPlayer(Properties.Resources.collision);
+        SoundPlayer point = new SoundPlayer(Properties.Resources.laser);
+        SoundPlayer winner = new SoundPlayer(Properties.Resources.win);
 
 
 
@@ -43,7 +45,7 @@ namespace spaceGame
 
         int player1X = 200;
         int player1Y = 320;
-        int heroHeight = 20;
+        int heroHeight = 30;
         int heroWidth = 5;
         int heroSpeed = 5;
         int player2X = 300;
@@ -53,12 +55,42 @@ namespace spaceGame
         int twoScore;
 
         SolidBrush whiteBrush = new SolidBrush(Color.White);
-        Pen whitePen = new Pen(Color.White);
+        Pen orangePen = new Pen(Color.Orange);
+        Pen greenPen = new Pen(Color.LimeGreen);
 
         string gameState = "waiting";
-        public Form1()
+        public form1()
         {
             InitializeComponent();
+        }
+        public void GameInitialize()
+
+        {
+            titleLabel.Text = "";
+
+            subTitleLabel.Text = "";
+            gameTimer.Enabled = true;
+            gameState = "running";
+            oneScore = 0;
+            twoScore = 0;
+            playerOneScoreLabel.Text = $"{oneScore}";
+            playerTwoScoreLabel.Text = $"{twoScore}";
+            winnerLabel.Text = "";
+
+
+            obstacleXLeftList.Clear();
+            obstacleXRightList.Clear();
+            obstacleYLeftList.Clear();
+            obstacleYRightList.Clear();
+
+            obstacleLeftSpeed.Clear();
+            obstacleRightSpeed.Clear();
+
+            player1X = 200;
+            player1Y = 320;
+            player2X = 300;
+            player2Y = 320;
+
         }
 
 
@@ -78,6 +110,21 @@ namespace spaceGame
                     break;
                 case Keys.S:
                     sDown = true;
+                    break;
+
+                case Keys.Space:
+                    if (gameState == "waiting" || gameState == "over")
+                    {
+                        GameInitialize();
+                    }
+                    break;
+
+                case Keys.Escape:
+                    if (gameState == "waiting" || gameState == "over")
+                    {
+                        Application.Exit();
+                    }
+
                     break;
 
             }
@@ -101,28 +148,93 @@ namespace spaceGame
                 case Keys.S:
                     sDown = false;
                     break;
+
+                case Keys.Space:
+                    if (gameState == "waiting" || gameState == "over")
+                    {
+                        GameInitialize();
+                    }
+                    break;
+
+                case Keys.Escape:
+                    if (gameState == "waiting" || gameState == "over")
+                    {
+                        Application.Exit();
+                    }
+
+                    break;
             }
 
         }
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
-            e.Graphics.FillRectangle(whiteBrush, player1X, player1Y, heroWidth, heroHeight);
-            e.Graphics.FillRectangle(whiteBrush, player2X, player2Y, heroWidth, heroHeight);
+            if (gameState == "waiting")
 
-            for (int i = 0; i < obstacleYLeftList.Count(); i++)
             {
 
+                titleLabel.Text = "Space Race!";
 
-                e.Graphics.FillRectangle(whiteBrush, obstacleXLeftList[i], obstacleYLeftList[i], obstacleWidthList, obstacleHeightList);
+                subTitleLabel.Text = "Press Space Bar to Start or Escape to Exit";
 
             }
-            for (int n = 0; n < obstacleYRightList.Count; n++)
+
+            else if (gameState == "over")
             {
-                e.Graphics.FillRectangle(whiteBrush, obstacleXRightList[n], obstacleYRightList[n], obstacleWidthList, obstacleHeightList);
+                playerOneScoreLabel.Text = "";
+                playerTwoScoreLabel.Text = "";
+
+                titleLabel.Text = "GAME OVER";
+                subTitleLabel.Text = "Press Space Bar to Start or Escape to Exit";
+
+                if (oneScore == 3)
+                {
+                    winnerLabel.Text = "PLAYER 1 WINS";
+                }
+                else if (twoScore == 3)
+                {
+                    winnerLabel.Text = "PLAYER 2 WINS";
+                }
+            }
+            else if (gameState == "running")
+            {
+                //rock ship #2 design 
+                e.Graphics.DrawLine(greenPen, player2X, player2Y, player2X, player2Y + 20);
+                e.Graphics.DrawLine(greenPen, player2X + 5, player2Y, player2X + 5, player2Y + 20);
+                e.Graphics.DrawLine(greenPen, player2X, player2Y, player2X + 5, player2Y);
+                e.Graphics.DrawLine(greenPen, player2X, player2Y + 20, player2X + 5, player2Y + 20);
+                e.Graphics.DrawLine(greenPen, player2X, player2Y + 20, player2X + 5, player2Y + 20);
+                e.Graphics.DrawLine(greenPen, player2X, player2Y, player2X + 5 / 2, player2Y - 10);
+                e.Graphics.DrawLine(greenPen, player2X + 5, player2Y, player2X + 5 / 2, player2Y - 10);
+                e.Graphics.DrawLine(orangePen, player2X, player2Y+20, player2X - 2, player2Y +22);
+                e.Graphics.DrawLine(orangePen, player2X+5, player2Y + 20, player2X + 7, player2Y + 22);
+                e.Graphics.DrawLine(orangePen, player2X-2, player2Y + 22, player2X +7, player2Y + 22);
+                // rocket ship#1 design 
+                e.Graphics.DrawLine(greenPen, player1X, player1Y, player1X, player1Y + 20);
+                e.Graphics.DrawLine(greenPen, player1X + 5, player1Y, player1X + 5, player1Y + 20);
+                e.Graphics.DrawLine(greenPen, player1X, player1Y, player1X + 5, player1Y);
+                e.Graphics.DrawLine(greenPen, player1X, player1Y + 20, player1X + 5, player1Y + 20);
+                e.Graphics.DrawLine(greenPen, player1X, player1Y + 20, player1X + 5, player1Y + 20);
+                e.Graphics.DrawLine(greenPen, player1X, player1Y, player1X + 5 / 2, player1Y - 10);
+                e.Graphics.DrawLine(greenPen, player1X + 5, player1Y, player1X + 5 / 2, player1Y - 10);
+                e.Graphics.DrawLine(orangePen, player1X, player1Y + 20, player1X - 2, player1Y + 22);
+                e.Graphics.DrawLine(orangePen, player1X + 5, player1Y + 20, player1X + 7, player1Y + 22);
+                e.Graphics.DrawLine(orangePen, player1X - 2, player1Y + 22, player1X + 7, player1Y + 22);
+
+
+                for (int i = 0; i < obstacleYLeftList.Count(); i++)
+                {
+                    e.Graphics.FillRectangle(whiteBrush, obstacleXLeftList[i], obstacleYLeftList[i], obstacleWidthList, obstacleHeightList);
+                }
+                for (int n = 0; n < obstacleYRightList.Count; n++)
+                {
+                    e.Graphics.FillRectangle(whiteBrush, obstacleXRightList[n], obstacleYRightList[n], obstacleWidthList, obstacleHeightList);
+                }
             }
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
+
+
             // move player 1 and 2 up and down and keep them on screen
             if (upDown == true && player2Y > 0)
             {
@@ -146,7 +258,7 @@ namespace spaceGame
 
             // check to see if we need to add asteroid
             randValue = randGen.Next(0, 101);
-            if (randValue <= 5)
+            if (randValue <= 7)
             {
 
                 obstacleYLeftList.Add(randGen.Next(2, 300));
@@ -154,7 +266,7 @@ namespace spaceGame
                 obstacleXLeftList.Add(0);
 
             }
-            else if (randValue <= 11)
+            else if (randValue <= 15)
             {
                 obstacleYRightList.Add(randGen.Next(2, 300));
                 obstacleRightSpeed.Add(randGen.Next(2, 5));
@@ -177,55 +289,64 @@ namespace spaceGame
                 oneScore++;
                 playerOneScoreLabel.Text = $"{oneScore}";
                 player1Y = 320;
+                point.Play();
+
             }
             if (player2Y < 20)
             {
                 twoScore++;
                 playerTwoScoreLabel.Text = $"{twoScore}";
                 player2Y = 320;
+                point.Play();
             }
 
 
             //check for collisions between the asteriods and the play
-            Rectangle player1Rec = new Rectangle(player1X, player1Y, heroWidth, heroHeight);
-            Rectangle player2Rec = new Rectangle(player2X, player2Y, heroWidth, heroHeight);
+            Rectangle player1Rec = new Rectangle(player1X, player1Y - 10, heroWidth, heroHeight);
+            Rectangle player2Rec = new Rectangle(player2X, player2Y - 10, heroWidth, heroHeight);
 
             for (int i = 0; i < obstacleYLeftList.Count(); i++)
             {
                 Rectangle obstacleLeftRec = new Rectangle(obstacleXLeftList[i], obstacleYLeftList[i], obstacleWidthList, obstacleHeightList);
-               // Rectangle obstacleRightRec = new Rectangle(obstacleXRightList[i], obstacleYRightList[i], obstacleWidthList, obstacleHeightList);
 
-                if (player1Rec.IntersectsWith(obstacleLeftRec))//|| player1Rec.IntersectsWith(obstacleRightRec))
+                if (player1Rec.IntersectsWith(obstacleLeftRec))
                 {
-                    player1Y = 320;
+                    player1Y = 400 - heroHeight - heroHeight;
+                    obstacle.Play();
+
+                    break;
                 }
-               else if (player2Rec.IntersectsWith(obstacleLeftRec)) //|| player2Rec.IntersectsWith(obstacleRightRec))
+                else if (player2Rec.IntersectsWith(obstacleLeftRec))
                 {
-                    player2Y = 320;
+                    obstacle.Play();
+                    player2Y = 400 - heroHeight - heroHeight;
+                    obstacle.Play();
+                    break;
                 }
-               
-                break;
             }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            for (int r = 0; r < obstacleYRightList.Count(); r++)
+            {
+                Rectangle obstacleRightRec = new Rectangle(obstacleXRightList[r], obstacleYRightList[r], obstacleWidthList, obstacleHeightList);
+                if (player1Rec.IntersectsWith(obstacleRightRec))
+                {
+                    player1Y = 400 - heroHeight - heroHeight;
+                    obstacle.Play();
+                    break;
+                }
+                else if (player2Rec.IntersectsWith(obstacleRightRec))
+                {
+                    player2Y = 400 - heroHeight - heroHeight;
+                    obstacle.Play();
+                    break;
+                }
+            }
 
             if (oneScore == 3 || twoScore == 3)
             {
+                winner.Play();
                 gameTimer.Enabled = false;
-
+                gameState = "over";
             }
 
 
